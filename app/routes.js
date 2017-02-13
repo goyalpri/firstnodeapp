@@ -1,14 +1,9 @@
-//var express = require('express');
-
-//var router = express.Router();
-
 module.exports = function (app) {
 
     var bodyParser = require('body-parser');
     app.use(bodyParser.urlencoded({ extended: true }));
     var sessions = require('express-session');
     app.use(sessions({ secret: 'ncdjkshi68sh', resave: false, saveUninitialized: true }));
-    var session;
 
     var mysql      = require('mysql');
     var mysqlC = mysql.createConnection({
@@ -29,22 +24,21 @@ module.exports = function (app) {
             }
         });
 
-
-    app.get('/', function (req, res) {
-        res.render('index.ejs');
-    });
-
     app.get('/login', function (req, res) {
-        session = req.session;
-        if(session.uniqueId){
-            res.redirect('/redirects');
+        if(req.session.uniqueId){
+            res.redirect('/');
+        } else {
+            res.render('login.ejs');
         }
 
-        res.render('login.ejs');
     });
 
     app.get('/signup', function (req, res) {
-        res.render('signup.ejs');
+        if (req.session.uniqueId) {
+            res.redirect('/');
+        } else {
+            res.render('signup.ejs');
+        }
     });
 
     app.post('/signup', function (req, res) {
@@ -59,62 +53,48 @@ module.exports = function (app) {
             //else res.send('success');
         });
 
-        res.write('You sent the Email "' + req.body.email+'".\n');
-        res.end();
+        res.send('you have successfully registered!!! <a href="/">PLEASE LOGIN TO CONTINUE </a>');
 
     });
 
     app.post('/login', function (req, res) {
-        //var useremail = req.body.email;
-        //var userpassword = req.body.password;
 
-        session = req.session;
-        if(session.uniqueId){
-            res.redirect('/redirects');
-        }
-
-        mysqlC.query('SELECT * from record where email = "'+req.body.email+'" ', function(err, rows, fields) {
+        mysqlC.query('SELECT * from record where email = "'+req.body.email+'" ',
+         function(err, rows, fields) {
             if (!err){
                 console.log('The solution is: ', rows);
                 if (req.body.password == rows[0].password){
-                    session.uniqueId = req.body.email;
+                    req.session.uniqueId = req.body.email;
+                    res.redirect('/');
+                }
+                else {
+                    res.send('invalid password');
                 }
 
-                res.redirect('/redirects');
-
-            }
-
-            else
+            } else {
                 console.log('Error while performing Query.');
-            });
-
+                res.send('some error occured!!');
+            }
+        });
     });
 
-    app.get('/redirects', function (req, res) {
-        session = req.session;
-        if(session.uniqueId){
-            res.redirect('/profile');
-        }
-        else{
-            res.write('Invalid email id or password <a href="/logout"> GO BACK </a>');
-        }
+    app.get('/', function (req, res) {
 
-    });
-
-    app.get('/profile', function (req, res) {
-
-        session = req.session;
-        if(session.uniqueId){
+        if (req.session.uniqueId) {
             res.send('your profile is here!!!!!!!!!!!!  <a href="/logout"> LOGOUT </a>');
+        } else {
+            res.redirect('/login');
         }
 
-    }
-
-    );
+    });
 
     app.get('/logout',function (req, res) {
-        req.session.destroy();
-        res.redirect('/');
+        req.session.destroy(function (err) {
+            if (err) {
+                console.log(err);
+            }
+            res.redirect('/');
+        });
 
     });
 

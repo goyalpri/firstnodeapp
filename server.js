@@ -2,13 +2,10 @@ var express = require('express');
 var app = express();
 var port = 4000;
 
-var connection = require('./config/database.js');
+//var connection = require('./config/database.js');
 
-connection.connect();
-
-
-
-connection.end();
+//connection.connect();
+//connection.end();
 
 
 //route our app
