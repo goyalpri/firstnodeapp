@@ -2,8 +2,15 @@ module.exports = function (app) {
 
     var bodyParser = require('body-parser');
     app.use(bodyParser.urlencoded({ extended: true }));
+
     var sessions = require('express-session');
     app.use(sessions({ secret: 'ncdjkshi68sh', resave: false, saveUninitialized: true }));
+
+    //express-handlebars*******************************
+    var exphbs = require('express-handlebars');
+    app.engine('handlebars', exphbs({defaultLayout: 'main'}));
+    app.set('view engine', 'handlebars');
+
 
     var mysql      = require('mysql');
     var mysqlC = mysql.createConnection({
@@ -28,7 +35,7 @@ module.exports = function (app) {
         if(req.session.uniqueId){
             res.redirect('/');
         } else {
-            res.render('login.ejs');
+            res.render('login');
         }
 
     });
@@ -37,7 +44,7 @@ module.exports = function (app) {
         if (req.session.uniqueId) {
             res.redirect('/');
         } else {
-            res.render('signup.ejs');
+            res.render('signup');
         }
     });
 
@@ -81,7 +88,8 @@ module.exports = function (app) {
     app.get('/', function (req, res) {
 
         if (req.session.uniqueId) {
-            res.send('your profile is here!!!!!!!!!!!!  <a href="/logout"> LOGOUT </a>');
+            res.render('home');
+            //res.send('your profile is here!!!!!!!!!!!!  <a href="/logout"> LOGOUT </a>');
         } else {
             res.redirect('/login');
         }
